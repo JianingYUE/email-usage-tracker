@@ -4,7 +4,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const password = "000";
 let currentId = null;
-let usedEmailsVisible = false;
 
 function checkPassword() {
   const input = document.getElementById("pwd").value;
@@ -31,22 +30,21 @@ async function loadEmail() {
 
   const emailData = data[0];
   currentId = emailData.id;
-
   document.getElementById("emailDisplay").innerText = emailData.email;
 
+  let daysAgo = 999;
   if (emailData.last_used) {
     const last = new Date(emailData.last_used);
     const now = new Date();
-    let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+    daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
     if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
-    document.getElementById("lastUsedDisplay").innerText = `${daysAgo} day(s) ago`;
-  } else {
-    document.getElementById("lastUsedDisplay").innerText = "Never used";
   }
 
+  document.getElementById("lastUsedDisplay").innerText = `${daysAgo} day(s) ago`;
+
+  // 显示最近记录
   const recentEmail = localStorage.getItem("recentEmail");
   const recentDays = localStorage.getItem("recentDays");
-
   if (recentEmail && recentDays !== null) {
     document.getElementById("recentEmail").innerText = recentEmail;
     document.getElementById("recentDays").innerText = recentDays;
@@ -58,7 +56,6 @@ async function confirmUsage() {
   if (!currentId) return;
 
   const now = new Date().toISOString();
-
   const { error } = await db
     .from("emails")
     .update({ last_used: now })
@@ -80,34 +77,27 @@ async function confirmUsage() {
 
 async function showUsedEmails() {
   const section = document.getElementById("usedEmails");
-
-  if (usedEmailsVisible) {
-    section.style.display = "none";
-    usedEmailsVisible = false;
-    return;
-  }
+  const list = document.getElementById("usedList");
+  list.innerHTML = "";
 
   const { data, error } = await db
     .from("emails")
     .select("email, last_used")
-    .neq("last_used", null) // ✅ 修复这里
     .order("last_used", { ascending: false });
 
-  if (error) {
+  if (error || !data) {
     alert("Failed to load used emails.");
-    console.error("Supabase error:", error);
     return;
   }
 
-  const list = document.getElementById("usedList");
-  list.innerHTML = "";
-
   const now = new Date();
-
   data.forEach(entry => {
-    const last = new Date(entry.last_used);
-    let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-    if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
+    let daysAgo = 999;
+    if (entry.last_used) {
+      const last = new Date(entry.last_used);
+      daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+      if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
+    }
 
     const li = document.createElement("li");
     li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
@@ -115,10 +105,8 @@ async function showUsedEmails() {
   });
 
   section.style.display = "block";
-  usedEmailsVisible = true;
 }
 
 function hideUsedEmails() {
   document.getElementById("usedEmails").style.display = "none";
-  usedEmailsVisible = false;
 }
