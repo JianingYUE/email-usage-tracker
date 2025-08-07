@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const password = "000";
 let currentId = null;
+let usedEmailsVisible = false;
 
 function checkPassword() {
   const input = document.getElementById("pwd").value;
@@ -80,14 +81,21 @@ async function confirmUsage() {
 async function showUsedEmails() {
   const section = document.getElementById("usedEmails");
 
+  if (usedEmailsVisible) {
+    section.style.display = "none";
+    usedEmailsVisible = false;
+    return;
+  }
+
   const { data, error } = await db
     .from("emails")
     .select("email, last_used")
-    .not("last_used", "not.is", null)
+    .neq("last_used", null) // ✅ 修复这里
     .order("last_used", { ascending: false });
 
   if (error) {
     alert("Failed to load used emails.");
+    console.error("Supabase error:", error);
     return;
   }
 
@@ -107,8 +115,10 @@ async function showUsedEmails() {
   });
 
   section.style.display = "block";
+  usedEmailsVisible = true;
 }
 
 function hideUsedEmails() {
   document.getElementById("usedEmails").style.display = "none";
+  usedEmailsVisible = false;
 }
