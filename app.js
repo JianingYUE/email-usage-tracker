@@ -4,7 +4,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const password = "000";
 let currentId = null;
-let usedEmailsVisible = false;
 
 function checkPassword() {
   const input = document.getElementById("pwd").value;
@@ -78,16 +77,8 @@ async function confirmUsage() {
   location.reload();
 }
 
-async function showUsedEmails(event) {
+async function showUsedEmails() {
   const section = document.getElementById("usedEmails");
-  const button = event.target;
-
-  if (usedEmailsVisible) {
-    section.style.display = "none";
-    usedEmailsVisible = false;
-    button.textContent = "Show Used Emails";
-    return;
-  }
 
   const { data, error } = await db
     .from("emails")
@@ -116,6 +107,8 @@ async function showUsedEmails(event) {
   });
 
   section.style.display = "block";
-  usedEmailsVisible = true;
-  button.textContent = "Hide Used Emails";
+}
+
+function hideUsedEmails() {
+  document.getElementById("usedEmails").style.display = "none";
 }
