@@ -76,9 +76,8 @@ async function confirmUsage() {
   }
 
   const email = document.getElementById("emailDisplay").innerText;
-  const days = document.getElementById("lastUsedDisplay").innerText.split(" ")[0];
   localStorage.setItem("recentEmail", email);
-  localStorage.setItem("recentDays", days);
+  localStorage.setItem("recentDays", "0");  // 使用即为0天
 
   alert("Usage recorded!");
   location.reload();
@@ -107,9 +106,11 @@ async function toggleUsedEmails() {
   list.innerHTML = "";
 
   data.forEach(entry => {
-    if (!entry.last_used) return; // skip null
+    if (!entry.last_used) return;
 
     const daysAgo = getDaysAgo(entry.last_used);
+    if (daysAgo >= 999) return;
+
     const li = document.createElement("li");
     li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
     list.appendChild(li);
