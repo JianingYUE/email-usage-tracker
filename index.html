@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Email Usage Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
@@ -26,7 +26,7 @@
 <body>
   <div id="login">
     <h2>Enter Password</h2>
-    <input type="password" id="pwd">
+    <input type="password" id="pwd" />
     <button onclick="checkPassword()">Login</button>
   </div>
 
@@ -36,16 +36,15 @@
     <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
     <button onclick="confirmUsage()">I used this email</button>
 
-    <hr>
+    <hr />
 
     <div id="recent">
       <h3>Recently Used</h3>
       <p>📧 <span id="recentEmail"></span></p>
-      <p>⏱️ Was last used: <span id="recentDays"></span> ago</p>
+      <p>⏱️ Was last used: <span id="recentDays"></span> day(s) ago</p>
     </div>
 
-    <button onclick="showUsedEmails()">Show Used Emails</button>
-    <button onclick="hideUsedEmails()">Hide Used Emails</button>
+    <button onclick="toggleUsedEmails()">Show/Hide Used Emails</button>
 
     <div id="usedEmails">
       <h3>📋 Used Emails</h3>
