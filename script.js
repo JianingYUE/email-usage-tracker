@@ -82,7 +82,7 @@ async function showUsedEmails() {
   const { data, error } = await db
     .from("emails")
     .select("email, last_used")
-    .not("last_used", "is", null)
+    .not("last_used", "not.is", null)
     .order("last_used", { ascending: false });
 
   if (error) {
