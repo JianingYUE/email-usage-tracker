@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const password = "000";
 let currentId = null;
+let usedEmailsVisible = false;
 
 function checkPassword() {
   const input = document.getElementById("pwd").value;
@@ -43,7 +44,6 @@ async function loadEmail() {
     document.getElementById("lastUsedDisplay").innerText = "Never used";
   }
 
-  // 显示最近使用记录
   const recentEmail = localStorage.getItem("recentEmail");
   const recentDays = localStorage.getItem("recentDays");
 
@@ -79,10 +79,18 @@ async function confirmUsage() {
 }
 
 async function showUsedEmails() {
+  const section = document.getElementById("usedEmails");
+
+  if (usedEmailsVisible) {
+    section.style.display = "none";
+    usedEmailsVisible = false;
+    return;
+  }
+
   const { data, error } = await db
     .from("emails")
     .select("email, last_used")
-    .filter("last_used", "not.is", null)  
+    .not("last_used", "not.is", null)
     .order("last_used", { ascending: false });
 
   if (error) {
@@ -105,5 +113,6 @@ async function showUsedEmails() {
     list.appendChild(li);
   });
 
-  document.getElementById("usedEmails").style.display = "block";
+  section.style.display = "block";
+  usedEmailsVisible = true;
 }
