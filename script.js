@@ -35,7 +35,13 @@ async function loadEmail() {
 
   if (emailData.last_used) {
     const last = new Date(emailData.last_used);
-    const daysAgo = Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+
+    if (isNaN(daysAgo) || daysAgo < 0) {
+      daysAgo = 0;
+    }
+
     document.getElementById("lastUsedDisplay").innerText = `${daysAgo} day(s) ago`;
   } else {
     document.getElementById("lastUsedDisplay").innerText = "Never used";
