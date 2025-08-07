@@ -1,67 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Email Usage Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
-      margin-top: 50px;
+      padding: 2em;
     }
-
-    input {
-      padding: 10px;
-      font-size: 1rem;
+    #app, #recent, #usedEmails {
+      display: none;
     }
-
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
     ul {
-      list-style: none;
+      list-style-type: none;
       padding: 0;
     }
-
     li {
-      margin: 5px 0;
+      margin: 0.5em 0;
     }
   </style>
 </head>
 <body>
   <div id="login">
-    <h2>Enter password</h2>
-    <input type="password" id="pwd" />
+    <h2>Enter Password</h2>
+    <input type="password" id="pwd">
     <button onclick="checkPassword()">Login</button>
   </div>
 
-  <div id="app" style="display:none;">
+  <div id="app">
     <h1>Email Usage Tracker</h1>
     <p>📧 Email: <span id="emailDisplay"></span></p>
     <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
     <button onclick="confirmUsage()">I used this email</button>
 
-    <div id="recent" style="margin-top: 40px; display: none;">
-      <hr />
+    <hr>
+
+    <div id="recent">
       <h3>Recently Used</h3>
       <p>📧 <span id="recentEmail"></span></p>
-      <p>⏱️ Was last used: <span id="recentDays"></span> day(s) ago</p>
+      <p>⏱️ Was last used: <span id="recentDays"></span> ago</p>
     </div>
 
-    <button onclick="showUsedEmails()" style="margin-top: 30px;">Show Used Emails</button>
+    <button onclick="showUsedEmails()">Show Used Emails</button>
 
-    <div id="usedEmails" style="display: none; margin-top: 20px;">
+    <div id="usedEmails">
       <h3>📋 Used Emails</h3>
       <ul id="usedList"></ul>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
