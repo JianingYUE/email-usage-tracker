@@ -37,23 +37,31 @@ async function loadEmail() {
     const last = new Date(emailData.last_used);
     const now = new Date();
     let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-
-    if (isNaN(daysAgo) || daysAgo < 0) {
-      daysAgo = 0;
-    }
-
+    if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
     document.getElementById("lastUsedDisplay").innerText = `${daysAgo} day(s) ago`;
   } else {
     document.getElementById("lastUsedDisplay").innerText = "Never used";
+  }
+
+  // 显示最近使用记录
+  const recentEmail = localStorage.getItem("recentEmail");
+  const recentDays = localStorage.getItem("recentDays");
+
+  if (recentEmail && recentDays !== null) {
+    document.getElementById("recentEmail").innerText = recentEmail;
+    document.getElementById("recentDays").innerText = recentDays;
+    document.getElementById("recent").style.display = "block";
   }
 }
 
 async function confirmUsage() {
   if (!currentId) return;
 
+  const now = new Date().toISOString();
+
   const { error } = await db
     .from("emails")
-    .update({ last_used: new Date().toISOString() })
+    .update({ last_used: now })
     .eq("id", currentId);
 
   if (error) {
@@ -61,6 +69,41 @@ async function confirmUsage() {
     return;
   }
 
+  const email = document.getElementById("emailDisplay").innerText;
+  const days = document.getElementById("lastUsedDisplay").innerText.split(" ")[0];
+  localStorage.setItem("recentEmail", email);
+  localStorage.setItem("recentDays", days);
+
   alert("Usage recorded!");
   location.reload();
+}
+
+async function showUsedEmails() {
+  const { data, error } = await db
+    .from("emails")
+    .select("email, last_used")
+    .not("last_used", "is", null)
+    .order("last_used", { ascending: false });
+
+  if (error) {
+    alert("Failed to load used emails.");
+    return;
+  }
+
+  const list = document.getElementById("usedList");
+  list.innerHTML = "";
+
+  const now = new Date();
+
+  data.forEach(entry => {
+    const last = new Date(entry.last_used);
+    let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+    if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
+
+    const li = document.createElement("li");
+    li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
+    list.appendChild(li);
+  });
+
+  document.getElementById("usedEmails").style.display = "block";
 }
