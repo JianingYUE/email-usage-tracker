@@ -78,12 +78,14 @@ async function confirmUsage() {
   location.reload();
 }
 
-async function showUsedEmails() {
+async function showUsedEmails(event) {
   const section = document.getElementById("usedEmails");
+  const button = event.target;
 
   if (usedEmailsVisible) {
     section.style.display = "none";
     usedEmailsVisible = false;
+    button.textContent = "Show Used Emails";
     return;
   }
 
@@ -115,4 +117,5 @@ async function showUsedEmails() {
 
   section.style.display = "block";
   usedEmailsVisible = true;
+  button.textContent = "Hide Used Emails";
 }
