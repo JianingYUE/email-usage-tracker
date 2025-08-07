@@ -4,8 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Email Usage Tracker</title>
-  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+  </style>
 </head>
 <body>
   <div id="login">
@@ -19,6 +46,20 @@
     <p>📧 Email: <span id="emailDisplay"></span></p>
     <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
     <button onclick="confirmUsage()">I used this email</button>
+
+    <div id="recent" style="margin-top: 40px; display: none;">
+      <hr />
+      <h3>Recently Used</h3>
+      <p>📧 <span id="recentEmail"></span></p>
+      <p>⏱️ Was last used: <span id="recentDays"></span> day(s) ago</p>
+    </div>
+
+    <button onclick="showUsedEmails()" style="margin-top: 30px;">Show Used Emails</button>
+
+    <div id="usedEmails" style="display: none; margin-top: 20px;">
+      <h3>📋 Used Emails</h3>
+      <ul id="usedList"></ul>
+    </div>
   </div>
 
   <script src="script.js"></script>
