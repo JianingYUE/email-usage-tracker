@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Usage Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <div id="login">
+    <h2>Enter password</h2>
+    <input type="password" id="pwd" />
+    <button onclick="checkPassword()">Login</button>
+  </div>
+
+  <div id="app" style="display:none;">
+    <h1>Email Usage Tracker</h1>
+    <p>📧 Email: <span id="emailDisplay"></span></p>
+    <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
+    <button onclick="confirmUsage()">I used this email</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
