@@ -1,81 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Usage Tracker</title>
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 你的应用逻辑 -->
-  <script defer src="app.js"></script>
-  <!-- 使用你更新后的 style.css（已包含登录卡片/动画/背景样式） -->
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 登录卡片（带 Hello there 图片） -->
-  <div id="login" class="login-card">
-    <div class="hello-wrap">
-      <!-- 换成你喜欢的“hello”表情包也行 -->
-      <img
-        class="hello-img"
-        id="helloImg"
-        src="https://i.imgflip.com/30zz5g.jpg"
-        alt="HELLO THERE meme"
-        onerror="this.src='https://i.imgur.com/7V3qjK3.png'"
-      />
-      <div class="hello-caption">
-        <span class="hello-dot"></span>
-        HELLO THERE
-      </div>
-    </div>
 
-    <h2 style="margin:14px 0 6px;">Enter Password</h2>
-    <div class="login-form">
-      <input type="password" id="pwd" class="login-input" placeholder="•••" />
-      <button class="login-btn" onclick="checkPassword()">Login</button>
-    </div>
+  <div id="loginCard" style="max-width: 300px; margin: auto; padding: 20px; border-radius: 12px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <img src="hello.png" alt="Hello There" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+    <h3>Enter Password</h3>
+    <input type="password" id="pwd" placeholder="Password">
+    <br>
+    <button onclick="checkPassword()">Login</button>
   </div>
 
-  <!-- 主应用（登录成功后显示） -->
-  <div id="app">
-    <h1>Email Usage Tracker</h1>
-
-    <!-- 统计卡片 -->
-    <div id="statsCard" class="card" style="display:none;">
-      <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:14px; line-height:22px;">
-        <div><strong>Total</strong>: <span id="statTotal">-</span></div>
-        <div><strong>Never used</strong>: <span id="statNever">-</span></div>
-        <div><strong>Used in 7d</strong>: <span id="statR7">-</span></div>
-        <div><strong>Used in 30d</strong>: <span id="statR30">-</span></div>
-        <div><strong>Median days</strong>: <span id="statMedian">-</span></div>
-      </div>
-    </div>
-
-    <!-- 推荐邮箱 -->
-    <p>📧 Email: <span id="emailDisplay"></span></p>
-    <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
-    <button onclick="confirmUsage()">I used this email</button>
-
-    <hr />
-
-    <!-- 最近使用 -->
-    <div id="recent" class="card" style="display:none;">
-      <h3>Recently Used</h3>
-      <p>📧 <span id="recentEmail"></span></p>
-      <p>⏱️ Was last used: <span id="recentDays"></span> day(s) ago</p>
-    </div>
-
-    <!-- 已使用列表 -->
+  <!-- Tracker section will be hidden until login -->
+  <div id="trackerSection" style="display:none; text-align:center; margin-top: 30px;">
+    <h2>Email Usage Tracker</h2>
+    <p>📧 Email: <span id="email"></span></p>
+    <p>⏱ Last used: <span id="lastUsed"></span></p>
+    <button onclick="markAsUsed()">I used this email</button>
+    <br><br>
     <button onclick="toggleUsedEmails()">Show/Hide Used Emails</button>
-    <div id="usedEmails" class="card" style="display:none;">
-      <h3>📋 Used Emails</h3>
-      <ul id="usedList"></ul>
-
-      <div id="usedPager">
-        <button id="usedPrevBtn" onclick="prevUsedPage()">Prev</button>
-        <span id="usedPageInfo">Page 1 / 1</span>
-        <button id="usedNextBtn" onclick="nextUsedPage()">Next</button>
-      </div>
-    </div>
+    <div id="usedEmailsList" style="display:none; margin-top: 20px;"></div>
   </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="app.js"></script>
+
 </body>
 </html>
+
