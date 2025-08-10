@@ -17,11 +17,17 @@ function checkPassword() {
   }
 }
 
+/** 以“跨过午夜+1天”的方式计算天数（比较日期，不按小时差） */
 function getDaysAgo(lastDate) {
-  const now = new Date();
+  if (!lastDate) return 999; // 没有时间=未使用
   const last = new Date(lastDate);
-  let daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-  if (isNaN(daysAgo) || daysAgo < 0) daysAgo = 0;
+  const now = new Date();
+
+  const lastMidnight = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+  const nowMidnight  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let daysAgo = Math.floor((nowMidnight - lastMidnight) / (1000 * 60 * 60 * 24));
+  if (daysAgo < 0) daysAgo = 0;
   if (daysAgo > 999) daysAgo = 999;
   return daysAgo;
 }
@@ -45,7 +51,8 @@ async function loadEmail() {
 
   if (emailData.last_used) {
     const daysAgo = getDaysAgo(emailData.last_used);
-    document.getElementById("lastUsedDisplay").innerText = `${daysAgo} day(s) ago`;
+    document.getElementById("lastUsedDisplay").innerText =
+      daysAgo === 999 ? "Never used" : `${daysAgo} day(s) ago`;
   } else {
     document.getElementById("lastUsedDisplay").innerText = "Never used";
   }
@@ -77,7 +84,7 @@ async function confirmUsage() {
 
   const email = document.getElementById("emailDisplay").innerText;
   localStorage.setItem("recentEmail", email);
-  localStorage.setItem("recentDays", "0");  // 使用即为0天
+  localStorage.setItem("recentDays", "0");  // 使用=0天（跨午夜后自动+1）
 
   alert("Usage recorded!");
   location.reload();
@@ -106,10 +113,10 @@ async function toggleUsedEmails() {
   list.innerHTML = "";
 
   data.forEach(entry => {
-    if (!entry.last_used) return;
+    if (!entry.last_used) return; // 未使用不进列表
 
     const daysAgo = getDaysAgo(entry.last_used);
-    if (daysAgo >= 999) return;
+    if (daysAgo >= 999) return;   // 999=未使用的占位，也不进列表
 
     const li = document.createElement("li");
     li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
