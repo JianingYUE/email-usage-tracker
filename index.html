@@ -46,10 +46,15 @@
 
     <button onclick="toggleUsedEmails()">Show/Hide Used Emails</button>
 
-    <div id="usedEmails">
-      <h3>📋 Used Emails</h3>
-      <ul id="usedList"></ul>
-    </div>
+    <div id="usedEmails" style="display:none;">
+  <h3>📋 Used Emails</h3>
+  <ul id="usedList"></ul>
+
+  <div id="usedPager" style="margin-top:12px; display:flex; gap:8px; justify-content:center; align-items:center;">
+    <button id="usedPrevBtn" onclick="prevUsedPage()">Prev</button>
+    <span id="usedPageInfo">Page 1 / 1</span>
+    <button id="usedNextBtn" onclick="nextUsedPage()">Next</button>
   </div>
+</div>
 </body>
 </html>
