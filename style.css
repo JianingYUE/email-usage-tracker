@@ -1,99 +1,74 @@
-/* 基础样式 */
-body {
-  font-family: sans-serif;
-  text-align: center;
-  margin-top: 50px;
-  background: radial-gradient(1200px 600px at 50% -10%, #e0f2fe 0%, transparent 55%),
-              linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+/* 全局 */
+:root{
+  --border:#e5e7eb; --shadow:#00000014; --bg:#f7f9fc; --muted:#f3f4f6;
+  --primary-bg:#eef2ff; --primary-border:#c7d2fe;
 }
-
-input {
-  padding: 10px;
-  font-size: 1rem;
+*{box-sizing:border-box}
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+  text-align:center;
+  margin:0; padding:32px 16px;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #e0f2fe 0%, transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  color:#111827;
 }
+h1,h2,h3{margin:8px 0 16px}
 
-button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  margin-top: 10px;
-  cursor: pointer;
+/* 通用卡片 */
+.card{
+  max-width:720px;
+  margin:16px auto;
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 10px 30px var(--shadow);
 }
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.used-list{list-style:none;margin:0;padding:0}
+.used-list li{margin:8px 0}
+.pager{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px}
+.primary-btn{
+  padding:10px 16px; border:1px solid var(--primary-border);
+  background:var(--primary-bg); border-radius:999px; cursor:pointer;
+}
+.primary-btn:hover{background:#e0e7ff}
+.ghost-btn{
+  padding:8px 12px; border:1px solid var(--border);
+  background:#fff; border-radius:999px; cursor:pointer;
+}
+.ghost-btn:hover{background:var(--muted)}
+.stats-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:14px;line-height:22px}
 
-/* 登录卡片样式 */
-.login-card {
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 20px 20px 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px #00000014;
-  background: #ffffffd9;
+/* 登录卡片 */
+.login-card{
+  max-width:420px;
+  margin:24px auto;
+  padding:20px 20px 24px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#ffffffd9;
+  box-shadow:0 10px 30px var(--shadow);
   backdrop-filter: blur(6px);
 }
-
-.hello-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+.hello-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.hello-img{
+  width:220px; max-width:80vw; border-radius:12px; box-shadow:0 6px 18px #0000001a;
+  user-select:none; animation:bob 3s ease-in-out infinite;
 }
-
-.hello-img {
-  width: 220px;
-  max-width: 80vw;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px #0000001a;
-  user-select: none;
-  animation: bob 3s ease-in-out infinite;
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-.3deg)}}
+.hello-caption{font-weight:700;letter-spacing:.8px;display:inline-flex;align-items:center;gap:6px}
+.hello-dot{width:8px;height:8px;border-radius:999px;background:#10b981;display:inline-block;box-shadow:0 0 0 4px #10b98122,0 0 16px #10b98155}
+.login-title{margin:14px 0 6px}
+.login-form{margin-top:10px;display:grid;gap:10px;justify-items:center}
+.login-input{
+  width:220px; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px;
 }
-
-@keyframes bob {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50%      { transform: translateY(-4px) rotate(-0.3deg); }
+.login-btn{
+  cursor:pointer; padding:8px 14px; border:1px solid var(--primary-border);
+  border-radius:10px; background:var(--primary-bg);
+  transition:transform .08s ease, background .2s ease;
 }
-
-.hello-caption {
-  font-weight: 700;
-  letter-spacing: .8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.hello-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #10b981;
-  display: inline-block;
-  box-shadow: 0 0 0 4px #10b98122, 0 0 16px #10b98155;
-}
-
-.login-form {
-  margin-top: 14px;
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-}
-
-.login-input {
-  width: 220px;
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-}
-
-.login-btn {
-  cursor: pointer;
-  padding: 8px 14px;
-  border: 1px solid #c7d2fe;
-  border-radius: 10px;
-  background: #eef2ff;
-  transition: transform .08s ease, background .2s ease;
-}
-.login-btn:hover {
-  background: #e0e7ff;
-}
-.login-btn:active {
-  transform: translateY(1px);
-}
+.login-btn:hover{background:#e0e7ff}
+.login-btn:active{transform:translateY(1px)}
