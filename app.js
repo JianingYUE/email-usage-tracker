@@ -24,19 +24,19 @@ function checkPassword() {
   }
 }
 
-/** 以“跨过午夜+1天”的方式计算天数（比较日期，不按小时差） */
+/** 跨过午夜 +1 天：比较日期，不按小时差 */
 function getDaysAgo(lastDate) {
   if (!lastDate) return 999; // 没有时间=未使用
   const last = new Date(lastDate);
-  const now = new Date();
+  const now  = new Date();
 
   const lastMidnight = new Date(last.getFullYear(), last.getMonth(), last.getDate());
   const nowMidnight  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  let daysAgo = Math.floor((nowMidnight - lastMidnight) / (1000 * 60 * 60 * 24));
-  if (daysAgo < 0) daysAgo = 0;
-  if (daysAgo > 999) daysAgo = 999;
-  return daysAgo;
+  let days = Math.floor((nowMidnight - lastMidnight) / (1000 * 60 * 60 * 24));
+  if (days < 0) days = 0;
+  if (days > 999) days = 999;
+  return days;
 }
 
 /** 加载最久未使用（或未使用）的邮箱 */
@@ -48,6 +48,7 @@ async function loadEmail() {
     .limit(1);
 
   if (error || !data || data.length === 0) {
+    console.error("loadEmail error:", error);
     alert("No email found.");
     return;
   }
@@ -82,11 +83,12 @@ async function confirmUsage() {
     .eq("id", currentId);
 
   if (error) {
+    console.error("confirmUsage error:", error);
     alert("Failed to update usage.");
     return;
   }
 
-  // 立刻把“最近使用”记成当前邮箱，天数设为0（跨午夜后自动+1）
+  // 立刻把“最近使用”记成当前邮箱，天数设为 0（跨午夜后自动 +1）
   const email = document.getElementById("emailDisplay").innerText;
   localStorage.setItem("recentEmail", email);
   localStorage.setItem("recentDays", "0");
@@ -105,35 +107,46 @@ async function toggleUsedEmails() {
     return;
   }
 
-  usedPage = 1; // 每次打开从第1页开始
+  usedPage = 1; // 每次打开从第 1 页开始
   await loadUsedEmailsPage(usedPage);
 
   section.style.display = "block";
   usedEmailsVisible = true;
 }
 
-/** 加载某一页 Used Emails（last_used != null） */
+/** 加载某一页 Used Emails：先 count 再分页取数据，更稳妥 */
 async function loadUsedEmailsPage(page) {
   const offset = (page - 1) * USED_PAGE_SIZE;
   const to = offset + USED_PAGE_SIZE - 1;
 
-  const { data, error, count } = await db
+  // 1) 只取数量（count-only）
+  const { count, error: countError } = await db
     .from("emails")
-    .select("email, last_used", { count: "exact" })
-    .neq("last_used", null) // 只显示使用过的
+    .select("id", { count: "exact", head: true })
+    .not("last_used", "is", null); // last_used IS NOT NULL
+
+  if (countError) {
+    console.error("Count error:", countError);
+    alert("Failed to load used emails.");
+    return;
+  }
+
+  usedTotalPages = Math.max(1, Math.ceil((count || 0) / USED_PAGE_SIZE));
+
+  // 2) 分页取数据
+  const { data, error } = await db
+    .from("emails")
+    .select("email, last_used")
+    .not("last_used", "is", null)
     .order("last_used", { ascending: false })
     .range(offset, to);
 
   if (error) {
+    console.error("Page data error:", error);
     alert("Failed to load used emails.");
-    console.error(error);
     return;
   }
 
-  // 计算总页数
-  usedTotalPages = Math.max(1, Math.ceil((count || 0) / USED_PAGE_SIZE));
-
-  // 渲染列表（并屏蔽 999 的情况，按理 last_used != null 就不会是 999）
   const list = document.getElementById("usedList");
   list.innerHTML = "";
 
@@ -144,7 +157,7 @@ async function loadUsedEmailsPage(page) {
   } else {
     data.forEach(entry => {
       const daysAgo = getDaysAgo(entry.last_used);
-      if (daysAgo >= 999) return; // 保险：不展示“未使用”的
+      if (daysAgo >= 999) return; // 保险：未使用的不展示
       const li = document.createElement("li");
       li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
       list.appendChild(li);
@@ -178,4 +191,3 @@ function updateUsedPagerUI() {
   prev.disabled = usedPage <= 1;
   next.disabled = usedPage >= usedTotalPages;
 }
-
