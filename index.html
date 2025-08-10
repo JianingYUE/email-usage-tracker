@@ -7,14 +7,16 @@
   <link rel="stylesheet" href="style.css?v=3" />
   <!-- Supabase SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 你的 app.js（含统计卡+分页等功能） -->
   <script defer src="app.js?v=8"></script>
 </head>
 <body>
 
-  <!-- 登录卡片（id 必须为 login，app.js 要用） -->
+  <!-- 登录卡片（id 必须为 login，与你的 app.js 对应） -->
   <div id="login" class="login-card">
     <div class="hello-wrap">
-      <img class="hello-img" src="hello.png" alt="HELLO THERE" />
+      <!-- 改成 asa.png；v=1 用来破缓存，换图时改数字即可 -->
+      <img class="hello-img" src="asa.png?v=1" alt="HELLO THERE" />
       <div class="hello-caption">
         <span class="hello-dot"></span>
         HELLO THERE
