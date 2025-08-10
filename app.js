@@ -52,6 +52,37 @@ function refreshRecent() {
   }
 }
 
+// ==== Stats Card ====
+async function loadStats() {
+  try {
+    const { data, error } = await db.rpc('email_stats');
+    if (error) throw error;
+
+    // rpc 返回的是数组（table 返回多行）；我们只取第一行
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) throw new Error('No stats row');
+
+    const total = row.total ?? 0;
+    const never = row.never_used ?? 0;
+    const r7 = row.recent7 ?? 0;
+    const r30 = row.recent30 ?? 0;
+    const median = row.median_days != null ? Number(row.median_days) : null;
+
+    document.getElementById('statTotal').innerText = String(total);
+    document.getElementById('statNever').innerText = String(never);
+    document.getElementById('statR7').innerText = String(r7);
+    document.getElementById('statR30').innerText = String(r30);
+    document.getElementById('statMedian').innerText = median == null ? '-' : `${median.toFixed(1)}`;
+
+    document.getElementById('statsCard').style.display = 'block';
+  } catch (e) {
+    console.error('loadStats error:', e);
+    // 失败就隐藏卡片，避免占位
+    const card = document.getElementById('statsCard');
+    if (card) card.style.display = 'none';
+  }
+}
+
 // ==== Auth ====
 function checkPassword() {
   const input = document.getElementById("pwd").value;
@@ -67,7 +98,10 @@ window.checkPassword = checkPassword; // expose for inline onclick
 
 // ==== Init ====
 async function init() {
-  await loadEmail();
+  await Promise.all([
+    loadEmail(),
+    loadStats(),
+  ]);
   refreshRecent();
   // 每 60 秒刷新一次“Recently Used”的天数显示
   setInterval(refreshRecent, 60 * 1000);
@@ -79,7 +113,6 @@ async function init() {
  * 加载推荐邮箱：
  * ① 优先选择从未使用（last_used IS NULL），按 email 字母序最早的一条；
  * ② 如果没有未使用，再选择 last_used 最早的一条（最久未使用）。
- * 如你在表里加了 created_at 列，可把 .order("email", ...) 改成 .order("created_at", {ascending:true})
  */
 async function loadEmail() {
   // ① 未使用（NULL）优先
@@ -87,7 +120,7 @@ async function loadEmail() {
     .from("emails")
     .select("id, email, last_used")
     .is("last_used", null)
-    .order("email", { ascending: true }) // 或者换成 created_at
+    .order("email", { ascending: true }) // 如果你加了 created_at，可换成 created_at
     .limit(1);
 
   // ② 如果没有未使用，再退到“最久未使用”
@@ -138,8 +171,11 @@ async function confirmUsage() {
   localStorage.setItem("recentEmail", email);
   localStorage.setItem("recentTs", nowIso);
 
-  // 刷新 UI
-  await loadEmail();
+  // 刷新 UI（包括统计卡）
+  await Promise.all([
+    loadEmail(),
+    loadStats(),
+  ]);
   refreshRecent();
   if (usedEmailsVisible) {
     await loadUsedEmailsPage(usedPage);
@@ -249,3 +285,4 @@ function updateUsedPagerUI() {
 // 暴露给 inline onclick
 window.loadEmail = loadEmail;
 window.refreshRecent = refreshRecent;
+window.loadStats = loadStats;
