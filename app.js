@@ -75,13 +75,32 @@ async function init() {
 
 // ==== Data Loads ====
 
-/** 加载最久未使用（或从未使用）的邮箱：NULL 优先，然后最早时间 */
+/**
+ * 加载推荐邮箱：
+ * ① 优先选择从未使用（last_used IS NULL），按 email 字母序最早的一条；
+ * ② 如果没有未使用，再选择 last_used 最早的一条（最久未使用）。
+ * 如你在表里加了 created_at 列，可把 .order("email", ...) 改成 .order("created_at", {ascending:true})
+ */
 async function loadEmail() {
-  const { data, error } = await db
+  // ① 未使用（NULL）优先
+  let { data, error } = await db
     .from("emails")
     .select("id, email, last_used")
-    .order("last_used", { ascending: true, nullsFirst: true })
+    .is("last_used", null)
+    .order("email", { ascending: true }) // 或者换成 created_at
     .limit(1);
+
+  // ② 如果没有未使用，再退到“最久未使用”
+  if (!error && data && data.length === 0) {
+    const res2 = await db
+      .from("emails")
+      .select("id, email, last_used")
+      .not("last_used", "is", null)
+      .order("last_used", { ascending: true })
+      .limit(1);
+    data = res2.data;
+    error = res2.error;
+  }
 
   if (error || !data || data.length === 0) {
     console.error("loadEmail error:", error);
@@ -227,6 +246,6 @@ function updateUsedPagerUI() {
   next.disabled = usedPage >= usedTotalPages;
 }
 
-// 为了在 <button onclick="..."> 能访问这些函数
+// 暴露给 inline onclick
 window.loadEmail = loadEmail;
 window.refreshRecent = refreshRecent;
