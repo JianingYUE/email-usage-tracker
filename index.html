@@ -3,63 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <title>Email Usage Tracker</title>
+  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 你的应用逻辑 -->
   <script defer src="app.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 2em;
-      background: #f9fafb;
-    }
-    #app, #recent, #usedEmails {
-      display: none;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    li {
-      margin: 0.5em 0;
-    }
-    #usedPager {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      align-items: center;
-    }
-    button {
-      cursor: pointer;
-      padding: 6px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: white;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #f3f4f6;
-    }
-    .card {
-      margin: 16px auto;
-      max-width: 720px;
-      padding: 12px 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px #0000000d;
-      background: #fff;
-    }
-  </style>
+  <!-- 使用你更新后的 style.css（已包含登录卡片/动画/背景样式） -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 登录 -->
-  <div id="login">
-    <h2>Enter Password</h2>
-    <input type="password" id="pwd" />
-    <button onclick="checkPassword()">Login</button>
+  <!-- 登录卡片（带 Hello there 图片） -->
+  <div id="login" class="login-card">
+    <div class="hello-wrap">
+      <!-- 换成你喜欢的“hello”表情包也行 -->
+      <img
+        class="hello-img"
+        id="helloImg"
+        src="https://i.imgflip.com/30zz5g.jpg"
+        alt="HELLO THERE meme"
+        onerror="this.src='https://i.imgur.com/7V3qjK3.png'"
+      />
+      <div class="hello-caption">
+        <span class="hello-dot"></span>
+        HELLO THERE
+      </div>
+    </div>
+
+    <h2 style="margin:14px 0 6px;">Enter Password</h2>
+    <div class="login-form">
+      <input type="password" id="pwd" class="login-input" placeholder="•••" />
+      <button class="login-btn" onclick="checkPassword()">Login</button>
+    </div>
   </div>
 
-  <!-- 主应用 -->
+  <!-- 主应用（登录成功后显示） -->
   <div id="app">
     <h1>Email Usage Tracker</h1>
 
@@ -82,7 +58,7 @@
     <hr />
 
     <!-- 最近使用 -->
-    <div id="recent" class="card">
+    <div id="recent" class="card" style="display:none;">
       <h3>Recently Used</h3>
       <p>📧 <span id="recentEmail"></span></p>
       <p>⏱️ Was last used: <span id="recentDays"></span> day(s) ago</p>
