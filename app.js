@@ -1,50 +1,86 @@
+// === Supabase & App Config ===
 const SUPABASE_URL = "https://ehfhcgzsirgebrfofaph.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZmhjZ3pzaXJnZWJyZm9mYXBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTg5MjMsImV4cCI6MjA3MDE3NDkyM30.OOnzt-mCdQNYU3b17O3vtDTrPA2AmJPij8OhfnvMAN0";
-
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const password = "000";
 
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==== State ====
 let currentId = null;
 let usedEmailsVisible = false;
 
-// ===== 分页状态 =====
+// Pagination
 const USED_PAGE_SIZE = 10;
 let usedPage = 1;
 let usedTotalPages = 1;
 
-/** 登录校验 */
+// ==== Utils ====
+function clampDays(n) {
+  if (n < 0) return 0;
+  if (n > 999) return 999;
+  return n;
+}
+
+/** 自然日差（跨午夜+1） */
+function daysBetweenDates(a, b) {
+  const A = new Date(a);
+  const B = new Date(b);
+  const A0 = new Date(A.getFullYear(), A.getMonth(), A.getDate());
+  const B0 = new Date(B.getFullYear(), B.getMonth(), B.getDate());
+  return clampDays(Math.floor((B0 - A0) / (1000 * 60 * 60 * 24)));
+}
+
+/** last_used -> 几天前；null 视为 999（仅用于显示） */
+function getDaysAgo(lastDate) {
+  if (!lastDate) return 999;
+  return daysBetweenDates(lastDate, new Date());
+}
+
+/** 刷新“Recently Used”（从 localStorage 读取时间戳并实时计算天数） */
+function refreshRecent() {
+  const recentEmail = localStorage.getItem("recentEmail");
+  const recentTs = localStorage.getItem("recentTs"); // ISO string
+  const recentEl = document.getElementById("recent");
+
+  if (recentEmail && recentTs) {
+    const d = getDaysAgo(recentTs);
+    document.getElementById("recentEmail").innerText = recentEmail;
+    document.getElementById("recentDays").innerText = String(d);
+    recentEl.style.display = "block";
+  } else {
+    recentEl.style.display = "none";
+  }
+}
+
+// ==== Auth ====
 function checkPassword() {
   const input = document.getElementById("pwd").value;
   if (input === password) {
     document.getElementById("login").style.display = "none";
     document.getElementById("app").style.display = "block";
-    loadEmail();
+    init();
   } else {
     alert("Wrong password");
   }
 }
+window.checkPassword = checkPassword; // expose for inline onclick
 
-/** 跨过午夜 +1 天：比较日期，不按小时差 */
-function getDaysAgo(lastDate) {
-  if (!lastDate) return 999; // 没有时间=未使用
-  const last = new Date(lastDate);
-  const now  = new Date();
-
-  const lastMidnight = new Date(last.getFullYear(), last.getMonth(), last.getDate());
-  const nowMidnight  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  let days = Math.floor((nowMidnight - lastMidnight) / (1000 * 60 * 60 * 24));
-  if (days < 0) days = 0;
-  if (days > 999) days = 999;
-  return days;
+// ==== Init ====
+async function init() {
+  await loadEmail();
+  refreshRecent();
+  // 每 60 秒刷新一次“Recently Used”的天数显示
+  setInterval(refreshRecent, 60 * 1000);
 }
 
-/** 加载最久未使用（或未使用）的邮箱 */
+// ==== Data Loads ====
+
+/** 加载最久未使用（或从未使用）的邮箱：NULL 优先，然后最早时间 */
 async function loadEmail() {
   const { data, error } = await db
     .from("emails")
-    .select("*")
-    .order("last_used", { ascending: true })
+    .select("id, email, last_used")
+    .order("last_used", { ascending: true, nullsFirst: true })
     .limit(1);
 
   if (error || !data || data.length === 0) {
@@ -55,24 +91,14 @@ async function loadEmail() {
 
   const emailData = data[0];
   currentId = emailData.id;
-
   document.getElementById("emailDisplay").innerText = emailData.email;
 
-  const daysAgo = getDaysAgo(emailData.last_used);
+  const isNever = emailData.last_used == null;
   document.getElementById("lastUsedDisplay").innerText =
-    daysAgo === 999 ? "Never used" : `${daysAgo} day(s) ago`;
-
-  // 最近一次（本地缓存）
-  const recentEmail = localStorage.getItem("recentEmail");
-  const recentDays  = localStorage.getItem("recentDays");
-  if (recentEmail && recentDays !== null) {
-    document.getElementById("recentEmail").innerText = recentEmail;
-    document.getElementById("recentDays").innerText  = recentDays;
-    document.getElementById("recent").style.display  = "block";
-  }
+    isNever ? "Never used" : `${getDaysAgo(emailData.last_used)} day(s) ago`;
 }
 
-/** 点击“我使用了这个邮箱” */
+/** 记录“我使用了这个邮箱” */
 async function confirmUsage() {
   if (!currentId) return;
 
@@ -88,16 +114,23 @@ async function confirmUsage() {
     return;
   }
 
-  // 立刻把“最近使用”记成当前邮箱，天数设为 0（跨午夜后自动 +1）
+  // 更新本地“最近使用”
   const email = document.getElementById("emailDisplay").innerText;
   localStorage.setItem("recentEmail", email);
-  localStorage.setItem("recentDays", "0");
+  localStorage.setItem("recentTs", nowIso);
+
+  // 刷新 UI
+  await loadEmail();
+  refreshRecent();
+  if (usedEmailsVisible) {
+    await loadUsedEmailsPage(usedPage);
+  }
 
   alert("Usage recorded!");
-  location.reload();
 }
+window.confirmUsage = confirmUsage;
 
-/** 打开/关闭 Used Emails（分页） */
+/** 展开/收起 Used Emails（分页） */
 async function toggleUsedEmails() {
   const section = document.getElementById("usedEmails");
 
@@ -107,14 +140,15 @@ async function toggleUsedEmails() {
     return;
   }
 
-  usedPage = 1; // 每次打开从第 1 页开始
+  usedPage = 1; // 每次打开从第一页
   await loadUsedEmailsPage(usedPage);
 
   section.style.display = "block";
   usedEmailsVisible = true;
 }
+window.toggleUsedEmails = toggleUsedEmails;
 
-/** 加载某一页 Used Emails：先 count 再分页取数据，更稳妥 */
+/** 分页加载 Used Emails：先 count 再取数据；仅拿 last_used 非 NULL 的 */
 async function loadUsedEmailsPage(page) {
   const offset = (page - 1) * USED_PAGE_SIZE;
   const to = offset + USED_PAGE_SIZE - 1;
@@ -123,7 +157,7 @@ async function loadUsedEmailsPage(page) {
   const { count, error: countError } = await db
     .from("emails")
     .select("id", { count: "exact", head: true })
-    .not("last_used", "is", null); // last_used IS NOT NULL
+    .not("last_used", "is", null);
 
   if (countError) {
     console.error("Count error:", countError);
@@ -133,7 +167,7 @@ async function loadUsedEmailsPage(page) {
 
   usedTotalPages = Math.max(1, Math.ceil((count || 0) / USED_PAGE_SIZE));
 
-  // 2) 分页取数据
+  // 2) 分页取数据（最近使用在前）
   const { data, error } = await db
     .from("emails")
     .select("email, last_used")
@@ -157,7 +191,6 @@ async function loadUsedEmailsPage(page) {
   } else {
     data.forEach(entry => {
       const daysAgo = getDaysAgo(entry.last_used);
-      if (daysAgo >= 999) return; // 保险：未使用的不展示
       const li = document.createElement("li");
       li.textContent = `📧 ${entry.email} — ⏱️ ${daysAgo} day(s) ago`;
       list.appendChild(li);
@@ -173,6 +206,7 @@ async function prevUsedPage() {
   usedPage -= 1;
   await loadUsedEmailsPage(usedPage);
 }
+window.prevUsedPage = prevUsedPage;
 
 /** 下一页 */
 async function nextUsedPage() {
@@ -180,8 +214,9 @@ async function nextUsedPage() {
   usedPage += 1;
   await loadUsedEmailsPage(usedPage);
 }
+window.nextUsedPage = nextUsedPage;
 
-/** 更新页脚显示与按钮可用状态 */
+/** 更新分页 UI */
 function updateUsedPagerUI() {
   const info = document.getElementById("usedPageInfo");
   const prev = document.getElementById("usedPrevBtn");
@@ -191,3 +226,7 @@ function updateUsedPagerUI() {
   prev.disabled = usedPage <= 1;
   next.disabled = usedPage >= usedTotalPages;
 }
+
+// 为了在 <button onclick="..."> 能访问这些函数
+window.loadEmail = loadEmail;
+window.refreshRecent = refreshRecent;
