@@ -1,7 +1,7 @@
 // === Supabase & App Config ===
 const SUPABASE_URL = "https://ehfhcgzsirgebrfofaph.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZmhjZ3pzaXJnZWJyZm9mYXBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTg5MjMsImV4cCI6MjA3MDE3NDkyM30.OOnzt-mCdQNYU3b17O3vtDTrPA2AmJPij8OhfnvMAN0";
-const password = "000";
+const password = "110";
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
