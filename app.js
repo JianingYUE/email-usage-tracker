@@ -286,3 +286,43 @@ function updateUsedPagerUI() {
 window.loadEmail = loadEmail;
 window.refreshRecent = refreshRecent;
 window.loadStats = loadStats;
+
+// ===== Delete current recommended email (GLOBAL) =====
+const EMAIL_TABLE     = 'emails';   // 改成你真实的表名
+const EMAIL_FIELD_KEY = 'email';    // 改成你真实的字段名
+
+function _getCurrentEmailText() {
+  return (document.getElementById('emailDisplay')?.textContent || '').trim();
+}
+
+async function _refreshAllSafe() {
+  try {
+    if (typeof loadStats === 'function')            await loadStats();
+    if (typeof loadRecommendation === 'function')   await loadRecommendation();
+    if (typeof loadUsedEmails === 'function')       await loadUsedEmails();
+  } catch (e) { console.warn('[refreshAll]', e); }
+}
+
+window.deleteCurrentEmail = async function () {
+  try {
+    const email = _getCurrentEmailText();
+    if (!email) {
+      alert('No email to delete.');
+      return;
+    }
+    if (!confirm(`Delete "${email}" ? This cannot be undone.`)) return;
+
+    const filter = {};
+    filter[EMAIL_FIELD_KEY] = email;
+
+    const { error } = await sb.from(EMAIL_TABLE).delete().match(filter);
+    if (error) throw error;
+
+    await _refreshAllSafe();
+    alert('Deleted.');
+  } catch (err) {
+    console.error('[deleteCurrentEmail]', err);
+    alert('Delete failed: ' + (err?.message || String(err)));
+  }
+};
+
