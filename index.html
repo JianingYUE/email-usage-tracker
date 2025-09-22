@@ -11,41 +11,32 @@
 <body>
   <main class="wrap">
 
-    <!-- 登录卡片（未登录时显示） -->
-    <section id="login" class="card">
-      <h2>Enter Password</h2>
-      <div class="login-form">
-        <input type="password" id="pwd" class="login-input" placeholder="•••" />
-        <button class="primary-btn" onclick="checkPassword()">Login</button>
-      </div>
-      <p class="muted" style="margin-top:6px">* 仅本地校验；你可在 app.js 里更改密码或改成你原来的验证方式</p>
+    <!-- 推荐邮箱卡片（保持原样，仅新增 1 颗按钮） -->
+    <section class="card">
+      <h2>Recommended Email</h2>
+      <p>📧 Email: <strong><span id="emailDisplay"></span></strong></p>
+      <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
+
+      <button class="primary-btn" onclick="confirmUsage()">I used this email</button>
+      <!-- ✅ 新增删除按钮：只删除当前推荐这条 -->
+      <button class="ghost-btn" onclick="deleteCurrentEmail()" style="margin-left:8px;">
+        Delete Email
+      </button>
     </section>
 
-    <!-- 主界面（登录后显示） -->
-    <div id="app" style="display:none;">
+    <!-- 已使用列表（保持原样） -->
+    <section class="card">
+      <h2>Used Emails</h2>
+      <ul id="usedList"></ul>
+    </section>
 
-      <!-- 推荐邮箱卡片 -->
-      <section class="card">
-        <h2>Recommended Email</h2>
-        <p>📧 Email: <strong><span id="emailDisplay"></span></strong></p>
-        <p>⏱️ Last used: <span id="lastUsedDisplay"></span></p>
+    <!-- 如果你还有统计卡/标签/搜索等，保持原样即可 -->
+    <!-- … -->
 
-        <button class="primary-btn" onclick="confirmUsage()">I used this email</button>
-        <button class="ghost-btn" onclick="deleteCurrentEmail()" style="margin-left:8px;">
-          Delete Email
-        </button>
-      </section>
-
-      <!-- 已使用列表 -->
-      <section class="card">
-        <h2>Used Emails</h2>
-        <ul id="usedList"></ul>
-      </section>
-
-    </div>
   </main>
 
-  <!-- 只加载一个主脚本（带版本号破缓存） -->
-  <script src="app.js?v=20250922c"></script>
+  <!-- 仍然只加载你的主脚本；带一个版本号避免缓存 -->
+  <script src="app.js?v=20250922e"></script>
 </body>
 </html>
+
