@@ -1,125 +1,217 @@
-/* ===== Supabase config (保持你现有项目，不需更改) ===== */
-const SUPABASE_URL  = "https://ehfhcgzsirgebrfofaph.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZmhjZ3pzaXJnZWJyZm9mYXBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTg5MjMsImV4cCI6MjA3MDE3NDkyM30.OOnzt-mCdQNYU3b17O3vtDTrPA2AmJPij8OhfnvMAN0";
+/* ========= Supabase 初始化 ========= */
+const SUPABASE_URL = "https://ehfhcgzsirgebrfofaph.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZmhjZ3pzaXJnZWJyZm9mYXBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTg5MjMsImV4cCI6MjA3MDE3NDkyM30.OOnzt-mCdQNYU3b17O3vtDTrPA2AmJPij8OhfnvMAN0";
 
-/* 只创建一次 client */
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ===== 业务表配置（按你实际情况修改） ===== */
-const EMAIL_TABLE     = 'emails';   // 表名
-const EMAIL_FIELD_KEY = 'email';    // 存邮箱地址的字段名
-const LAST_USED_KEY   = 'last_used_at'; // 最近使用时间的字段名（如果没有，可忽略）
-
-/* ===== DOM helpers ===== */
-const $ = (sel) => document.querySelector(sel);
-function setText(id, value){ const el=document.getElementById(id); if(el) el.textContent=value ?? ''; }
-
-/* ===== 登录 gating（简易本地密码门；你也可改回自己原来的验证） ===== */
-const _ids = { login: 'login', app: 'app' };
-function _showLogin(){ const a=$(`#${_ids.app}`), l=$(`#${_ids.login}`); if(a) a.style.display='none'; if(l) l.style.display='block'; }
-function _showApp(){   const a=$(`#${_ids.app}`), l=$(`#${_ids.login}`); if(a) a.style.display='block'; if(l) l.style.display='none'; }
-
-/* 你可以改成自己的校验方式；这里是最小可用本地门（明文仅作演示） */
-const LOCAL_PASS = '1234'; // ← 改成你自己的密码
-window.checkPassword = function(){
-  const v = ($('#pwd')?.value || '').trim();
-  if (!v) return alert('Enter password');
-  if (v !== LOCAL_PASS) return alert('Wrong password');
-  localStorage.setItem('pass_ok', '1');
-  boot(); // 登录通过后初始化
-};
-
-/* ===== 推荐/列表逻辑（示例实现；字段名可按你表结构调整） ===== */
-async function loadRecommendation(){
-  // 简单逻辑：挑 last_used_at 最早的一条作为“推荐”
-  const { data, error } = await sb.from(EMAIL_TABLE)
-    .select(`${EMAIL_FIELD_KEY}, ${LAST_USED_KEY}`)
-    .order(LAST_USED_KEY, { ascending: true, nullsFirst: true })
-    .limit(1);
-  if (error) { console.error(error); return; }
-
-  const row = data?.[0];
-  const email = row?.[EMAIL_FIELD_KEY] || '';
-  const lu    = row?.[LAST_USED_KEY] ? new Date(row[LAST_USED_KEY]) : null;
-
-  setText('emailDisplay', email);
-  setText('lastUsedDisplay', lu ? lu.toDateString() : 'Never');
+/* ========= 登录逻辑 ========= */
+const PASS = "110"; // 你设定的密码
+function checkPassword() {
+  const v = document.getElementById("pwd").value;
+  if (v === PASS) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    refreshAll();
+  } else {
+    alert("Wrong password");
+  }
 }
+window.checkPassword = checkPassword;
 
-async function loadUsedEmails(){
-  const list = $('#usedList');
-  if (!list) return;
+/* ========= 全局变量 ========= */
+let usedEmails = [];
+let usedPage = 1;
+const USED_PAGE_SIZE = 10;
 
-  const { data, error } = await sb.from(EMAIL_TABLE)
-    .select(`${EMAIL_FIELD_KEY}, ${LAST_USED_KEY}`)
-    .order(LAST_USED_KEY, { ascending: false, nullsLast: true })
-    .limit(50);
-  if (error) { console.error(error); list.innerHTML = '<li class="muted">Failed to load.</li>'; return; }
-
-  list.innerHTML = '';
-  if (!data?.length) {
-    list.innerHTML = '<li class="muted">No used emails.</li>';
+/* ========= 推荐邮箱 ========= */
+async function loadRecommendation() {
+  const { data, error } = await sb
+    .from("emails")
+    .select("*")
+    .order("last_used", { ascending: true, nullsFirst: true })
+    .limit(1);
+  if (error) {
+    console.error(error);
     return;
   }
+  if (data.length === 0) return;
 
-  data.forEach(row=>{
-    const email = row[EMAIL_FIELD_KEY];
-    const lu    = row[LAST_USED_KEY] ? new Date(row[LAST_USED_KEY]).toDateString() : 'Never';
-    const li = document.createElement('li');
-    li.innerHTML = `<strong>${email}</strong> <span class="muted"> · Last: ${lu}</span>`;
+  const rec = data[0];
+  document.getElementById("emailDisplay").textContent = rec.email;
+  document.getElementById("lastUsedDisplay").textContent = rec.last_used
+    ? Math.floor((Date.now() - new Date(rec.last_used)) / 86400000) + " day(s) ago"
+    : "Never";
+}
+
+/* ========= 标记使用 ========= */
+async function confirmUsage() {
+  const email = document.getElementById("emailDisplay").textContent.trim();
+  if (!email) return;
+
+  const { error } = await sb
+    .from("emails")
+    .update({ last_used: new Date().toISOString() })
+    .eq("email", email);
+  if (error) {
+    console.error(error);
+    return;
+  }
+  await refreshAll();
+}
+window.confirmUsage = confirmUsage;
+
+/* ========= 最近使用 ========= */
+async function refreshRecent() {
+  const { data, error } = await sb
+    .from("emails")
+    .select("*")
+    .order("last_used", { ascending: false })
+    .limit(1);
+  if (error) {
+    console.error(error);
+    return;
+  }
+  if (data.length === 0 || !data[0].last_used) {
+    document.getElementById("recent").style.display = "none";
+    return;
+  }
+  document.getElementById("recent").style.display = "block";
+  document.getElementById("recentEmail").textContent = data[0].email;
+  document.getElementById("recentDays").textContent = Math.floor(
+    (Date.now() - new Date(data[0].last_used)) / 86400000
+  );
+}
+window.refreshRecent = refreshRecent;
+
+/* ========= 已使用列表 ========= */
+async function loadUsedEmails() {
+  const { data, error } = await sb
+    .from("emails")
+    .select("*")
+    .not("last_used", "is", null)
+    .order("last_used", { ascending: false });
+  if (error) {
+    console.error(error);
+    return;
+  }
+  usedEmails = data;
+  renderUsedEmails();
+}
+
+function renderUsedEmails() {
+  const list = document.getElementById("usedList");
+  list.innerHTML = "";
+
+  const start = (usedPage - 1) * USED_PAGE_SIZE;
+  const end = start + USED_PAGE_SIZE;
+  const pageItems = usedEmails.slice(start, end);
+
+  for (const row of pageItems) {
+    const li = document.createElement("li");
+    li.textContent = `${row.email} · ${Math.floor(
+      (Date.now() - new Date(row.last_used)) / 86400000
+    )} day(s) ago`;
     list.appendChild(li);
-  });
+  }
+
+  const totalPages = Math.max(1, Math.ceil(usedEmails.length / USED_PAGE_SIZE));
+  document.getElementById(
+    "usedPageInfo"
+  ).textContent = `Page ${usedPage} / ${totalPages}`;
+  document.getElementById("usedPrevBtn").disabled = usedPage <= 1;
+  document.getElementById("usedNextBtn").disabled = usedPage >= totalPages;
 }
 
-async function loadStats(){
-  // 简单统计（可按需完善）
-  // 这里不渲染统计卡片，只是保证函数存在以便调用不报错
-  return;
+function toggleUsedEmails() {
+  const div = document.getElementById("usedEmails");
+  div.style.display = div.style.display === "none" ? "block" : "none";
+}
+function prevUsedPage() {
+  usedPage--;
+  renderUsedEmails();
+}
+function nextUsedPage() {
+  usedPage++;
+  renderUsedEmails();
+}
+window.toggleUsedEmails = toggleUsedEmails;
+window.prevUsedPage = prevUsedPage;
+window.nextUsedPage = nextUsedPage;
+
+/* ========= 统计卡片 ========= */
+async function loadStats() {
+  const { data, error } = await sb.from("emails").select("*");
+  if (error) {
+    console.error(error);
+    return;
+  }
+  const total = data.length;
+  const never = data.filter((r) => !r.last_used).length;
+  const used7 = data.filter(
+    (r) => r.last_used && Date.now() - new Date(r.last_used) <= 7 * 86400000
+  ).length;
+  const used30 = data.filter(
+    (r) => r.last_used && Date.now() - new Date(r.last_used) <= 30 * 86400000
+  ).length;
+
+  const days = data
+    .filter((r) => r.last_used)
+    .map((r) => Math.floor((Date.now() - new Date(r.last_used)) / 86400000));
+  const median = days.length
+    ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)]
+    : "-";
+
+  document.getElementById("statsCard").style.display = "block";
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statNever").textContent = never;
+  document.getElementById("statR7").textContent = used7;
+  document.getElementById("statR30").textContent = used30;
+  document.getElementById("statMedian").textContent = median;
+}
+window.loadStats = loadStats;
+
+/* ========= 刷新 ========= */
+async function refreshAll() {
+  await Promise.all([loadRecommendation(), refreshRecent(), loadUsedEmails(), loadStats()]);
+}
+window.refreshAll = refreshAll;
+
+/* ========= 删除当前推荐邮箱 ========= */
+const EMAIL_TABLE = "emails";       // 表名
+const EMAIL_FIELD_KEY = "email";    // 邮箱字段名
+
+function _getCurrentEmailText() {
+  return (document.getElementById("emailDisplay")?.textContent || "").trim();
 }
 
-/* “我用了这个邮箱” —— 把 last_used_at 写成现在（可按你表字段调整） */
-window.confirmUsage = async function(){
-  const email = ($('#emailDisplay')?.textContent || '').trim();
-  if (!email) return alert('No email.');
+async function _refreshAllSafe() {
+  try {
+    if (typeof loadStats === "function") await loadStats();
+    if (typeof loadRecommendation === "function") await loadRecommendation();
+    if (typeof loadUsedEmails === "function") await loadUsedEmails();
+    if (typeof refreshRecent === "function") await refreshRecent();
+  } catch (e) {
+    console.warn("[refreshAll]", e);
+  }
+}
 
-  const { error } = await sb.from(EMAIL_TABLE)
-    .update({ [LAST_USED_KEY]: new Date().toISOString() })
-    .eq(EMAIL_FIELD_KEY, email);
-
-  if (error) { alert(error.message || String(error)); return; }
-  await Promise.all([loadRecommendation(), loadUsedEmails()]);
-  alert('Marked as used.');
-};
-
-/* 删除“当前推荐”的邮箱（你需要 RLS 允许 delete，否则会报权限不足） */
-window.deleteCurrentEmail = async function(){
-  try{
-    const email = ($('#emailDisplay')?.textContent || '').trim();
-    if (!email) { alert('No email to delete.'); return; }
+window.deleteCurrentEmail = async function () {
+  try {
+    const email = _getCurrentEmailText();
+    if (!email) {
+      alert("No email to delete.");
+      return;
+    }
     if (!confirm(`Delete "${email}" ? This cannot be undone.`)) return;
 
     const { error } = await sb.from(EMAIL_TABLE).delete().eq(EMAIL_FIELD_KEY, email);
     if (error) throw error;
 
-    await Promise.all([loadRecommendation(), loadUsedEmails()]);
-    alert('Deleted.');
-  }catch(err){
-    console.error(err);
-    alert('Delete failed: ' + (err?.message || String(err)));
+    await _refreshAllSafe();
+    alert("Deleted.");
+  } catch (err) {
+    console.error("[deleteCurrentEmail]", err);
+    alert("Delete failed: " + (err?.message || String(err)));
   }
 };
-
-/* ===== 启动流程 ===== */
-async function boot(){
-  // 本地“已通过门禁”才显示主界面
-  if (localStorage.getItem('pass_ok') !== '1') { _showLogin(); return; }
-  _showApp();
-  await Promise.all([loadRecommendation(), loadUsedEmails(), loadStats()]);
-}
-
-/* 页面就绪后启动 */
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot, { once: true });
-} else {
-  boot();
-}
